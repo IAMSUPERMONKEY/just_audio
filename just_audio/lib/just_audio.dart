@@ -495,7 +495,8 @@ class AudioPlayer {
 
   int? _getRelativeIndex(int offset) {
     if (_audioSource == null || currentIndex == null) return null;
-    if (loopMode == LoopMode.one) return currentIndex;
+    // 注释此行，单曲循环的判断
+    // if (loopMode == LoopMode.one) return currentIndex;
     final effectiveIndices = this.effectiveIndices;
     if (effectiveIndices == null || effectiveIndices.isEmpty) return null;
     final effectiveIndicesInv = _effectiveIndicesInv!;
