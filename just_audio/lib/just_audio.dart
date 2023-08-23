@@ -2759,6 +2759,8 @@ class LockCachingAudioSource extends StreamAudioSource {
   /// downloaded) to 1.0 (download complete).
   Stream<double> get downloadProgressStream => _downloadProgressSubject.stream;
 
+  bool get downloading => _downloading;
+
   /// Removes the underlying cache files. It is an error to clear the cache
   /// while a download is in progress.
   Future<void> clearCache() async {
