@@ -183,14 +183,17 @@ try {
 
 // Catching errors during playback (e.g. lost network connection)
 player.playbackEventStream.listen((event) {}, onError: (Object e, StackTrace st) {
-  if (e is PlayerException) {
+  if (e is PlatformException) {
     print('Error code: ${e.code}');
     print('Error message: ${e.message}');
+    print('AudioSource index: ${e.details?["index"]}');
   } else {
     print('An error occurred: $e');
   }
 });
 ```
+
+Note: In a future release, the exception type on `playbackEventStream` will change from `PlatformException` to `PlayerException`.
 
 ### Working with state streams
 
@@ -433,7 +436,7 @@ Please also consider pressing the thumbs up button at the top of [this page](htt
 | read from file                 | ✅      | ✅  | ✅    | ✅  | ✅      | ✅    |
 | read from asset                | ✅      | ✅  | ✅    | ✅  | ✅      | ✅    |
 | read from byte stream          | ✅      | ✅  | ✅    | ✅  | ✅      | ✅    |
-| request headers                | ✅      | ✅  | ✅    |     | ✅      | ✅    |
+| request headers                | ✅      | ✅  | ✅    | *   | ✅      | ✅    |
 | DASH                           | ✅      |     |       |     | ✅      | ✅    |
 | HLS                            | ✅      | ✅  | ✅    |     | ✅      | ✅    |
 | ICY metadata                   | ✅      | ✅  | ✅    |     |         |       |
@@ -452,6 +455,9 @@ Please also consider pressing the thumbs up button at the top of [this page](htt
 | skip silence                   | ✅      |     |       |     |         |       |
 | equalizer                      | ✅      |     |       |     |         | ✅    |
 | volume boost                   | ✅      |     |       |     |         | ✅    |
+
+(*): While request headers cannot be set directly on Web, cookies can be used to send information in the [Cookie header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cookie). See also `AudioPlayer.setWebCrossOrigin` to allow sending cookies when loading audio files from the same origin or a different origin.
+
 
 ## Experimental features
 

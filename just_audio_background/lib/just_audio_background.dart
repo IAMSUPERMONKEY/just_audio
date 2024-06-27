@@ -292,6 +292,13 @@ class _JustAudioPlayer extends AudioPlayerPlatform {
       _playerAudioHandler.customSetShuffleOrder(request);
 
   @override
+  Future<SetWebCrossOriginResponse> setWebCrossOrigin(
+      SetWebCrossOriginRequest request) async {
+    _playerAudioHandler.customSetWebCrossOrigin(request);
+    return SetWebCrossOriginResponse();
+  }
+
+  @override
   Future<SeekResponse> seek(SeekRequest request) =>
       _playerAudioHandler.customPlayerSeek(request);
 
@@ -507,6 +514,11 @@ class _PlayerAudioHandler extends BaseAudioHandler
     ));
   }
 
+  Future<SetWebCrossOriginResponse> customSetWebCrossOrigin(
+      SetWebCrossOriginRequest request) async {
+    return await (await _player).setWebCrossOrigin(request);
+  }
+
   Future<ConcatenatingInsertAllResponse> customConcatenatingInsertAll(
       ConcatenatingInsertAllRequest request) async {
     final cat = _source!.findCat(request.id)!;
@@ -582,6 +594,8 @@ class _PlayerAudioHandler extends BaseAudioHandler
       await (await _player).setPreferredPeakBitRate(request);
 
   void _updateQueue() {
+    assert(sequence.every((source) => source.tag is MediaItem),
+        'Error : When using just_audio_background, you should always use a MediaItem as tag when setting an AudioSource. See AudioSource.uri documentation for more information.');
     queue.add(sequence.map((source) => source.tag as MediaItem).toList());
   }
 
