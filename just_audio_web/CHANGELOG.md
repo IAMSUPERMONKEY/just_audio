@@ -1,3 +1,15 @@
+## 0.4.16
+
+* Fix play interrupted by load.
+
+## 0.4.15
+
+* Support errorCode, errorMessage.
+
+## 0.4.14
+
+* Add setWebSinkId (@dganzella).
+
 ## 0.4.13
 
 * Fix `dart2js`/`dart2wasm` compile error with Flutter 3.26.0 (@SleepySquash).

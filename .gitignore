@@ -17,4 +17,6 @@ coverage
 pubspec.lock
 Podfile.lock
 
+**/.cxx/
+
 .idea/
