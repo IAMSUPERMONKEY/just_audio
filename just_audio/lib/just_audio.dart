@@ -11,6 +11,7 @@ import 'package:just_audio_platform_interface/just_audio_platform_interface.dart
 import 'package:meta/meta.dart' show experimental;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:retry/retry.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:uuid/uuid.dart';
@@ -3482,7 +3483,13 @@ class LockCachingAudioSource extends StreamAudioSource {
 
     final httpClient = _createHttpClient(userAgent: _player?._userAgent);
     final httpRequest = await _getUrl(httpClient, uri, headers: headers);
-    final response = await httpRequest.close();
+
+    // use retry to handle the timeout exception
+    final response = await retryOptions.retry(
+      () async => await httpRequest.close().timeout(const Duration(seconds: 10)),
+      retryIf: (e) => e is TimeoutException || e is SocketException,
+    );
+    // final response = await httpRequest.close();
     if (response.statusCode != 200) {
       httpClient.close();
       throw Exception('HTTP Status Error: ${response.statusCode}');
@@ -3602,7 +3609,11 @@ class LockCachingAudioSource extends StreamAudioSource {
           if (headers != null) ...headers!,
           HttpHeaders.rangeHeader: rangeRequest.header,
         }).then((httpRequest) async {
-          final response = await httpRequest.close();
+          final response = await retryOptions.retry(
+            () async => await httpRequest.close().timeout(const Duration(seconds: 10)),
+            retryIf: (e) => e is TimeoutException || e is SocketException,
+          );
+          // final response = await httpRequest.close();
           if (response.statusCode != 206) {
             httpClient.close();
             throw Exception('HTTP Status Error: ${response.statusCode}');
@@ -4615,5 +4626,13 @@ HttpClient _createHttpClient({String? userAgent}) {
   if (userAgent != null) {
     client.userAgent = userAgent;
   }
+  // 设置超时
+  client.connectionTimeout = const Duration(seconds: 10);
   return client;
 }
+
+
+const retryOptions = RetryOptions(
+  maxAttempts: 3,
+  delayFactor: Duration(milliseconds: 300),
+);
