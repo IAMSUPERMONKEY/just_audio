@@ -795,6 +795,29 @@ void runTests() {
     await player.dispose();
   });
 
+  test('lock-caching-source-loads-from-cache-file-when-complete', () async {
+    final player = AudioPlayer();
+    final cacheFile =
+        await File('${Directory.systemTemp.path}/just_audio_cache_test.mp3')
+            .create();
+    await cacheFile.writeAsBytes(byteRangeData);
+    final source = LockCachingAudioSource(
+      Uri.parse('https://foo.foo/foo.mp3'),
+      cacheFile: cacheFile,
+    );
+
+    await player.setAudioSource(source);
+
+    final platformSource = mock.mostRecentPlayer!.audioSource;
+    expect(platformSource, isA<ProgressiveAudioSourceMessage>());
+    expect(
+      Uri.parse((platformSource as ProgressiveAudioSourceMessage).uri),
+      equals(Uri.file(cacheFile.path)),
+    );
+    await source.clearCache();
+    await player.dispose();
+  });
+
   test('idle-playlist', () async {
     final player = AudioPlayer();
     expect(player.sequence.length, equals(0));
@@ -1820,6 +1843,8 @@ class MockAudioPlayer extends AudioPlayerPlatform {
   @override
   Stream<PlaybackEventMessage> get playbackEventMessageStream =>
       eventController.stream;
+
+  AudioSourceMessage? get audioSource => _audioSource;
 
   void _broadcastDataMessage(PlayerDataMessage message) {
     dataMessageController.add(message);

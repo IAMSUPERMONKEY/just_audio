@@ -1461,7 +1461,6 @@ class AudioPlayer {
       await _currentIndexSubject.close();
       await _loopModeSubject.close();
       await _shuffleModeEnabledSubject.close();
-      await _shuffleModeEnabledSubject.close();
     });
   }
 
@@ -3308,6 +3307,10 @@ abstract class StreamAudioSource extends IndexedAudioSource {
   @override
   Future<void> _onLoad() async {
     await super._onLoad();
+    await _setUriForLoad();
+  }
+
+  Future<void> _setUriForLoad() async {
     if (kIsWeb) {
       final response = await request();
       _uri ??= _encodeDataUrl(await base64.encoder.bind(response.stream).join(),
@@ -3411,6 +3414,16 @@ class LockCachingAudioSource extends StreamAudioSource {
     return await file.exists() ? AudioSource.uri(Uri.file(file.path)) : this;
   }
 
+  @override
+  Future<void> _setUriForLoad() async {
+    final file = await cacheFile;
+    if (await file.exists()) {
+      _uri = Uri.file(file.path);
+    } else {
+      await super._setUriForLoad();
+    }
+  }
+
   /// Emits the current download progress as a double value from 0.0 (nothing
   /// downloaded) to 1.0 (download complete).
   Stream<double> get downloadProgressStream => _downloadProgressSubject.stream;
@@ -3486,7 +3499,8 @@ class LockCachingAudioSource extends StreamAudioSource {
 
     // use retry to handle the timeout exception
     final response = await retryOptions.retry(
-      () async => await httpRequest.close().timeout(const Duration(seconds: 10)),
+      () async =>
+          await httpRequest.close().timeout(const Duration(seconds: 10)),
       retryIf: (e) => e is TimeoutException || e is SocketException,
     );
     // final response = await httpRequest.close();
@@ -3610,7 +3624,8 @@ class LockCachingAudioSource extends StreamAudioSource {
           HttpHeaders.rangeHeader: rangeRequest.header,
         }).then((httpRequest) async {
           final response = await retryOptions.retry(
-            () async => await httpRequest.close().timeout(const Duration(seconds: 10)),
+            () async =>
+                await httpRequest.close().timeout(const Duration(seconds: 10)),
             retryIf: (e) => e is TimeoutException || e is SocketException,
           );
           // final response = await httpRequest.close();
@@ -4630,7 +4645,6 @@ HttpClient _createHttpClient({String? userAgent}) {
   client.connectionTimeout = const Duration(seconds: 10);
   return client;
 }
-
 
 const retryOptions = RetryOptions(
   maxAttempts: 3,
